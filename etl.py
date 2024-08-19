@@ -2,6 +2,7 @@ from apis import endpoints
 import requests
 import json
 import os
+import polars as pl
 
 class ETL:
     def __init__(self) -> None:
@@ -19,3 +20,11 @@ class ETL:
     def save_json(self, data, filename):
         with open(filename, "w") as file:
             json.dump(data, file, indent=4)
+
+    def load_json(self, filename):
+        with open(filename, "r") as file:
+            return json.load(file)
+
+    def load_data_from_json_to_df(self, filename):
+        return pl.read_json(filename)
+            
