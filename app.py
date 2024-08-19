@@ -9,9 +9,14 @@ db = Database("ibge.db")
 
 points = ["noticias", "nomes", "localidades"]
 
-def etl_flow():
+def extract_flow():
     for point in points:
-        data = etl.get_data(point)
+        match point:
+            case "noticias":
+                data = etl.get_data_with_pagination(point)
+            case _:
+                data = etl.get_data(point)
+
         etl.mkdir("data")
         etl.mkdir(f"data/{point}")
         current_day = datetime.now().strftime("%Y%m%d")
@@ -30,22 +35,16 @@ def etl_flow():
         
         print("")
 
-
-if __name__ == "__main__":
-    #etl_flow()
-
+def transform_and_load():
     for point in points:
         files = os.listdir("data/"+point)
         last_file = sorted(files)[-1]
         print(f"Load file for '{point}': {last_file}")
         match point:
-
             case "noticias":
                 df = pl.DataFrame(
-                    etl.load_data_from_json_to_df(f"data/{point}/{last_file}")["items"][0]
+                    etl.load_data_from_json_to_df(f"data/{point}/{last_file}")
                 )
-                df.columns = ["items"]
-                df = df.unnest("items")
             case "nomes":
                 df = etl.load_data_from_json_to_df(f"data/{point}/{last_file}")
             case "localidades":
@@ -56,3 +55,21 @@ if __name__ == "__main__":
         db.truncate_table(point)
         db.insert_data(point, df)
         print("-"*50)
+
+
+if __name__ == "__main__":
+
+    while True:
+        option = input("Digite 'e' para extrair, 't' para transformar e carregar, 'q' para sair: ")
+        match option:
+            case "e":
+                extract_flow()
+            case "t":
+                transform_and_load()
+            case "q":
+                db.close_connection()
+                break
+            case _:
+                print("Opção inválida")
+                continue
+    
