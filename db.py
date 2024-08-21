@@ -12,6 +12,13 @@ class Database:
         self.conn.execute(sql)
         self.conn.commit()
 
+    def select(self, sql):
+        return self.conn.execute(sql).fetchall()
+
+    def drop_table(self, table_name):
+        sql = f"DROP TABLE IF EXISTS {table_name}"
+        self.run_sql(sql)
+
     def create_table(self, table_name, columns):
         # Inicializa a DDL de Create Table com o nome da tabela
         ddl = f"CREATE TABLE IF NOT EXISTS {table_name} ("
